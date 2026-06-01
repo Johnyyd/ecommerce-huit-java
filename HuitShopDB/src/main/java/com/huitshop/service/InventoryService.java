@@ -143,6 +143,10 @@ public class InventoryService {
         return inventoryDao.getWarehouses();
     }
 
+    public List<com.huitshop.model.Supplier> getSuppliers() {
+        return inventoryDao.getSuppliers();
+    }
+
     public List<ProductVariant> getProductVariants() {
         return inventoryDao.getProductVariants();
     }

@@ -282,6 +282,31 @@ public class InventoryDao {
         return list;
     }
 
+    public List<com.huitshop.model.Supplier> getSuppliers() {
+        List<com.huitshop.model.Supplier> list = new ArrayList<>();
+        String sql = "SELECT * FROM suppliers WHERE is_active = 1";
+        try (Connection conn = DbConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                com.huitshop.model.Supplier s = new com.huitshop.model.Supplier();
+                s.setId(rs.getInt("id"));
+                s.setCode(rs.getString("code"));
+                s.setName(rs.getNString("name"));
+                s.setContactPerson(rs.getNString("contact_person"));
+                s.setPhone(rs.getString("phone"));
+                s.setEmail(rs.getString("email"));
+                s.setAddress(rs.getNString("address"));
+                s.setTaxCode(rs.getString("tax_code"));
+                s.setActive(rs.getBoolean("is_active"));
+                list.add(s);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
     public List<ProductVariant> getProductVariants() {
         List<ProductVariant> list = new ArrayList<>();
         String sql = "SELECT v.*, p.name AS p_name FROM product_variants v JOIN products p ON v.product_id = p.id WHERE v.is_active = 1 ORDER BY p.name";

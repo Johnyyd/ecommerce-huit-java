@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HuitShop - Hệ Thống Quản Lý & Mua Sắm E-Commerce</title>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Chart.js for beautiful admin dashboards -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Login & Register Screen -->
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-card glass-panel">
+            <div class="auth-header">
+                <div class="logo">
+                    <i class="fa-solid fa-bolt logo-icon"></i>
+                    <span>HUIT<span class="gradient-text">SHOP</span></span>
+                </div>
+                <p id="auth-subtitle">Hệ thống mua sắm và quản lý bán hàng thông minh</p>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form active">
+                <h2 class="form-title">Đăng Nhập</h2>
+                <div class="form-group">
+                    <label for="login-email"><i class="fa-regular fa-envelope"></i> Email</label>
+                    <input type="email" id="login-email" required placeholder="nhanvien@huitshop.com hoặc khachhang@gmail.com">
+                </div>
+                <div class="form-group">
+                    <label for="login-password"><i class="fa-solid fa-lock"></i> Mật khẩu</label>
+                    <input type="password" id="login-password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Đăng Nhập <i class="fa-solid fa-arrow-right-to-bracket"></i></button>
+                <div class="auth-switch">
+                    Chưa có tài khoản? <a href="#" id="go-to-register">Đăng ký ngay</a>
+                </div>
+            </form>
+
+            <!-- Register Form -->
+            <form id="register-form" class="auth-form">
+                <h2 class="form-title">Đăng Ký</h2>
+                <div class="form-group">
+                    <label for="reg-name"><i class="fa-regular fa-user"></i> Họ và Tên</label>
+                    <input type="text" id="reg-name" required placeholder="Nguyễn Văn A">
+                </div>
+                <div class="form-group">
+                    <label for="reg-email"><i class="fa-regular fa-envelope"></i> Email</label>
+                    <input type="email" id="reg-email" required placeholder="name@domain.com">
+                </div>
+                <div class="form-group">
+                    <label for="reg-phone"><i class="fa-solid fa-phone"></i> Số điện thoại</label>
+                    <input type="tel" id="reg-phone" placeholder="09xxxxxxxx">
+                </div>
+                <div class="form-group">
+                    <label for="reg-password"><i class="fa-solid fa-lock"></i> Mật khẩu</label>
+                    <input type="password" id="reg-password" required placeholder="Tối thiểu 6 ký tự">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Tạo Tài Khoản <i class="fa-solid fa-user-plus"></i></button>
+                <div class="auth-switch">
+                    Đã có tài khoản? <a href="#" id="go-to-login">Đăng nhập</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Application Interface (Hidden initially) -->
+    <div id="app-screen" class="app-screen hidden">
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="sidebar glass-panel">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fa-solid fa-bolt logo-icon"></i>
+                    <span>HUIT<span class="gradient-text">SHOP</span></span>
+                </div>
+                <span class="role-badge" id="user-role-badge">CUSTOMER</span>
+            </div>
+
+            <!-- Navigation menus dynamically generated based on role -->
+            <nav class="sidebar-menu" id="sidebar-nav-menu">
+                <!-- Will be injected by JS -->
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-profile-summary">
+                    <div class="user-avatar" id="user-avatar-char">U</div>
+                    <div class="user-info">
+                        <span class="user-name" id="user-display-name">Người dùng</span>
+                        <span class="user-email" id="user-display-email">user@mail.com</span>
+                    </div>
+                </div>
+                <button id="btn-logout" class="btn-logout-icon" title="Đăng xuất">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-navbar glass-panel">
+                <div class="search-bar-container">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="global-search" placeholder="Tìm kiếm sản phẩm, hóa đơn...">
+                </div>
+                <div class="navbar-actions">
+                    <div class="quick-warranty-lookup" id="quick-warranty-trigger" title="Tra cứu nhanh bảo hành">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Bảo hành</span>
+                    </div>
+                    <div class="cart-trigger" id="cart-navbar-trigger">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <span class="cart-badge" id="cart-count">0</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Panels Container -->
+            <div id="panel-container" class="panel-container">
+                <!-- Panels injected dynamically: e.g., catalog, cart, orders, profile, warranty, admin_dashboard, etc. -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Product Detail Modal -->
+    <div id="product-detail-modal" class="modal">
+        <div class="modal-content glass-panel large">
+            <span class="close-btn">&times;</span>
+            <div class="product-modal-grid">
+                <div class="product-gallery">
+                    <div class="main-image-container">
+                        <img id="modal-product-img" src="" alt="Sản phẩm">
+                    </div>
+                    <div class="thumbnail-list" id="modal-product-thumbnails">
+                        <!-- Thumbnail images -->
+                    </div>
+                </div>
+                <div class="product-info-details">
+                    <span class="brand-tag" id="modal-product-brand">ASUS</span>
+                    <h2 class="product-title" id="modal-product-name">Tên sản phẩm</h2>
+                    <div class="rating-review-summary">
+                        <div class="rating-stars" id="modal-product-rating-stars"></div>
+                        <span class="rating-value" id="modal-product-rating">4.5</span>
+                        <span class="review-count" id="modal-product-reviews-count">(12 đánh giá)</span>
+                    </div>
+                    <p class="product-short-desc" id="modal-product-short-desc">Mô tả ngắn của sản phẩm</p>
+                    
+                    <div class="variant-selector-section">
+                        <h3>Chọn Phiên Bản:</h3>
+                        <div class="variant-grid" id="modal-product-variants">
+                            <!-- Variants buttons -->
+                        </div>
+                    </div>
+
+                    <div class="price-action-section">
+                        <div class="price-display">
+                            <span class="current-price" id="modal-product-price">0đ</span>
+                            <span class="original-price" id="modal-product-orig-price">0đ</span>
+                        </div>
+                        <div class="add-to-cart-action">
+                            <div class="quantity-spinner">
+                                <button class="btn-spinner" id="spinner-dec">-</button>
+                                <input type="number" id="spinner-qty" value="1" min="1">
+                                <button class="btn-spinner" id="spinner-inc">+</button>
+                            </div>
+                            <button class="btn btn-primary" id="modal-btn-add-to-cart">
+                                <i class="fa-solid fa-cart-plus"></i> Thêm Vào Giỏ Hàng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs: Specifications & Reviews -->
+            <div class="modal-tabs">
+                <div class="tab-header">
+                    <button class="tab-btn active" data-tab="tab-specs">Thông số kỹ thuật</button>
+                    <button class="tab-btn" data-tab="tab-desc">Chi tiết sản phẩm</button>
+                    <button class="tab-btn" data-tab="tab-reviews">Đánh giá khách hàng</button>
+                </div>
+                <div class="tab-content-container">
+                    <div class="tab-pane active" id="tab-specs">
+                        <table class="specs-table" id="modal-product-specs-table">
+                            <!-- Specifications -->
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="tab-desc">
+                        <p class="product-long-desc" id="modal-product-long-desc">Mô tả chi tiết</p>
+                    </div>
+                    <div class="tab-pane" id="tab-reviews">
+                        <div class="reviews-section">
+                            <div class="write-review-card">
+                                <h4>Gửi Đánh Giá Của Bạn</h4>
+                                <div class="rating-input">
+                                    <span class="star-rating-input" data-rating="1"><i class="fa-regular fa-star"></i></span>
+                                    <span class="star-rating-input" data-rating="2"><i class="fa-regular fa-star"></i></span>
+                                    <span class="star-rating-input" data-rating="3"><i class="fa-regular fa-star"></i></span>
+                                    <span class="star-rating-input" data-rating="4"><i class="fa-regular fa-star"></i></span>
+                                    <span class="star-rating-input" data-rating="5"><i class="fa-regular fa-star"></i></span>
+                                </div>
+                                <div class="form-group">
+                                    <textarea id="review-comment" placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..." rows="3"></textarea>
+                                </div>
+                                <button class="btn btn-primary btn-sm" id="btn-submit-review">Gửi đánh giá</button>
+                            </div>
+                            <div class="reviews-list" id="modal-product-reviews-list">
+                                <!-- Review items -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shipping Modal (Admin order dispatch with IMEI scanning) -->
+    <div id="shipping-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-btn">&times;</span>
+            <h2 class="modal-title"><i class="fa-solid fa-truck-ramp-box"></i> Xác Nhận Giao Hàng & Nhập IMEI/Serial</h2>
+            <p class="modal-subtitle" id="shipping-modal-order-code">Đơn hàng: ORDXXXXXXXX</p>
+            
+            <form id="shipping-form">
+                <input type="hidden" id="shipping-order-id">
+                <div class="form-group">
+                    <label for="shipping-warehouse-id">Chọn Kho Xuất Hàng</label>
+                    <select id="shipping-warehouse-id" class="form-control" required>
+                        <!-- Warehouses -->
+                    </select>
+                </div>
+                
+                <div class="imei-entry-list-container">
+                    <h3>Danh sách sản phẩm cần cấp Serial / IMEI:</h3>
+                    <div id="shipping-imei-list">
+                        <!-- Product rows requiring IMEI entry -->
+                    </div>
+                </div>
+
+                <div class="modal-actions-bar">
+                    <button type="button" class="btn btn-secondary close-modal-btn">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-success">Bắt Đầu Giao Hàng <i class="fa-solid fa-plane-departure"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Product Form Modal (Create/Edit Product) -->
+    <div id="product-form-modal" class="modal">
+        <div class="modal-content glass-panel large">
+            <span class="close-btn">&times;</span>
+            <h2 class="modal-title" id="product-form-title">Thêm Sản Phẩm Mới</h2>
+            <form id="product-edit-form">
+                <input type="hidden" id="admin-product-id">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="admin-product-name">Tên sản phẩm</label>
+                        <input type="text" id="admin-product-name" required placeholder="Laptop Gaming Asus ROG...">
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="admin-product-category">Danh mục</label>
+                            <select id="admin-product-category" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-product-brand">Thương hiệu</label>
+                            <select id="admin-product-brand" required></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="admin-product-short-desc">Mô tả ngắn</label>
+                    <input type="text" id="admin-product-short-desc" required placeholder="Cấu hình rút gọn...">
+                </div>
+
+                <div class="form-group">
+                    <label for="admin-product-desc">Mô tả chi tiết</label>
+                    <textarea id="admin-product-desc" rows="4" required placeholder="Thông tin chi tiết về sản phẩm..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="admin-product-specs">Thông số kỹ thuật (Định dạng JSON)</label>
+                    <textarea id="admin-product-specs" rows="3" required placeholder='{"CPU": "Intel i7", "RAM": "16GB DDR5", "Ổ cứng": "512GB SSD"}'></textarea>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="admin-product-status">Trạng thái ban đầu</label>
+                        <select id="admin-product-status">
+                            <option value="ACTIVE">Hoạt động (Active)</option>
+                            <option value="INACTIVE">Khóa (Inactive)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 25px;">
+                        <input type="checkbox" id="admin-product-featured" style="width: auto;">
+                        <label for="admin-product-featured" style="margin-bottom: 0;">Sản phẩm nổi bật (Featured)</label>
+                    </div>
+                </div>
+
+                <!-- Fields for default variant if creating new -->
+                <div id="new-product-variant-fields">
+                    <h3 class="section-title-divider">Thông tin Phiên Bản mặc định</h3>
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label for="admin-variant-name">Tên phiên bản</label>
+                            <input type="text" id="admin-variant-name" placeholder="Xám - RAM 16GB">
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-variant-sku">SKU Code</label>
+                            <input type="text" id="admin-variant-sku" placeholder="ASUS-FA507-GREY">
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-variant-thumbnail">Ảnh sản phẩm (Tên file ảnh)</label>
+                            <input type="text" id="admin-variant-thumbnail" placeholder="laptop_asus.jpg">
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label for="admin-variant-price">Giá bán (VND)</label>
+                            <input type="number" id="admin-variant-price" placeholder="18500000">
+                        </div>
+                        <div class="form-group">
+                            <label for="admin-variant-orig-price">Giá gốc hãng (VND)</label>
+                            <input type="number" id="admin-variant-orig-price" placeholder="21000000">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-actions-bar">
+                    <button type="button" class="btn btn-secondary close-modal-btn">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary" id="admin-product-save-btn">Lưu Sản Phẩm <i class="fa-regular fa-floppy-disk"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Import Stock Modal -->
+    <div id="import-stock-modal" class="modal">
+        <div class="modal-content glass-panel">
+            <span class="close-btn">&times;</span>
+            <h2 class="modal-title"><i class="fa-solid fa-file-import"></i> Nhập Kho Hàng Từ Nhà Cung Cấp</h2>
+            
+            <form id="import-stock-form">
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="import-warehouse-id">Chọn Kho Nhận</label>
+                        <select id="import-warehouse-id" class="form-control" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="import-supplier-id">Chọn Nhà Cung Cấp</label>
+                        <select id="import-supplier-id" class="form-control" required>
+                            <!-- Supplier lists -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="import-variant-id">Chọn Phiên Bản Sản Phẩm</label>
+                    <select id="import-variant-id" class="form-control" required></select>
+                </div>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label for="import-cost-price">Giá nhập kho (VND / Cái)</label>
+                        <input type="number" id="import-cost-price" class="form-control" required placeholder="12000000">
+                    </div>
+                    <div class="form-group">
+                        <label for="import-qty">Số lượng nhập</label>
+                        <input type="number" id="import-qty" class="form-control" required min="1" value="1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="import-serials-input">Nhập danh sách số Serial/IMEI (Mỗi dòng một số)</label>
+                    <textarea id="import-serials-input" class="form-control" rows="5" placeholder="SN-ASUS-100293
+SN-ASUS-100294
+..."></textarea>
+                    <small style="color: #94a3b8; display:block; margin-top: 5px;">Số dòng khớp với số lượng nhập. Nếu sản phẩm không cần quản lý serial, hãy để trống.</small>
+                </div>
+
+                <div class="modal-actions-bar">
+                    <button type="button" class="btn btn-secondary close-modal-btn">Hủy bỏ</button>
+                    <button type="submit" class="btn btn-primary">Xác Nhận Nhập Kho <i class="fa-solid fa-truck-moving"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="js/app.js"></script>
+</body>
+</html>
