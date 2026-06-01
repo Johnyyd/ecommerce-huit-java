@@ -2149,36 +2149,46 @@ async function loadAdminUsersPage() {
 
 // --- Open Catalog Product Details Modal ---
 async function openProductDetail(productId) {
+    console.log("openProductDetail: Fetching product details for ID:", productId);
     try {
         const p = await apiCall(`/api/products/${productId}`);
+        console.log("openProductDetail: Fetched product DTO:", p);
+        
         state.activeDetailProduct = p;
-        state.activeDetailVariant = p.variants.length > 0 ? p.variants[0] : null;
+        state.activeDetailVariant = (p.variants && p.variants.length > 0) ? p.variants[0] : null;
         
         // Render headers
         document.getElementById('modal-product-brand').textContent = p.brand ? p.brand.name : 'CHÍNH HÃNG';
-        document.getElementById('modal-product-name').textContent = p.name;
-        document.getElementById('modal-product-rating').textContent = p.ratingAverage.toFixed(1);
-        document.getElementById('modal-product-reviews-count').textContent = `(${p.reviewCount} đánh giá)`;
-        document.getElementById('modal-product-short-desc').textContent = p.description.substring(0, 150) + '...';
-        document.getElementById('modal-product-long-desc').textContent = p.description;
+        document.getElementById('modal-product-name').textContent = p.name || 'Sản phẩm';
+        
+        const ratingAvg = typeof p.ratingAverage === 'number' ? p.ratingAverage : 0;
+        document.getElementById('modal-product-rating').textContent = ratingAvg.toFixed(1);
+        document.getElementById('modal-product-reviews-count').textContent = `(${p.reviewCount || 0} đánh giá)`;
+        
+        const desc = p.description || '';
+        // If description has HTML tags, strip them for the short summary display
+        const strippedDesc = desc.replace(/<[^>]*>/g, '');
+        document.getElementById('modal-product-short-desc').textContent = strippedDesc.substring(0, 150) + (strippedDesc.length > 150 ? '...' : '');
+        document.getElementById('modal-product-long-desc').innerHTML = desc;
         
         // Rating stars
         const stars = document.getElementById('modal-product-rating-stars');
         stars.innerHTML = '';
-        const avg = Math.round(p.ratingAverage);
+        const avg = Math.round(ratingAvg);
         for (let i = 1; i <= 5; i++) {
             stars.innerHTML += i <= avg ? `<i class="fa-solid fa-star"></i>` : `<i class="fa-regular fa-star"></i>`;
         }
 
         // Render main image
         const img = document.getElementById('modal-product-img');
-        const imgUrl = resolveImageUrl(p.variants.length > 0 ? p.variants[0].thumbnailUrl : '');
+        const imgUrl = resolveImageUrl(state.activeDetailVariant ? state.activeDetailVariant.thumbnailUrl : '');
         img.src = imgUrl;
 
         // Render Thumbnails list
         const thumbs = document.getElementById('modal-product-thumbnails');
         thumbs.innerHTML = '';
-        p.images.forEach((imgObj, idx) => {
+        const images = p.images || [];
+        images.forEach((imgObj, idx) => {
             const thumbUrl = resolveImageUrl(imgObj.imageUrl);
             const tImg = document.createElement('img');
             tImg.src = thumbUrl;
@@ -2194,7 +2204,8 @@ async function openProductDetail(productId) {
         // Add variants selection
         const varsGrid = document.getElementById('modal-product-variants');
         varsGrid.innerHTML = '';
-        p.variants.forEach((v, idx) => {
+        const variants = p.variants || [];
+        variants.forEach((v, idx) => {
             const btn = document.createElement('button');
             btn.className = `variant-btn ${idx === 0 ? 'active' : ''}`;
             btn.innerHTML = `
@@ -2219,6 +2230,9 @@ async function openProductDetail(productId) {
         if (state.activeDetailVariant) {
             document.getElementById('modal-product-price').textContent = formatVND(state.activeDetailVariant.price);
             document.getElementById('modal-product-orig-price').textContent = formatVND(state.activeDetailVariant.originalPrice);
+        } else {
+            document.getElementById('modal-product-price').textContent = '0đ';
+            document.getElementById('modal-product-orig-price').textContent = '0đ';
         }
 
         // Quantities spinner
@@ -2248,7 +2262,9 @@ async function openProductDetail(productId) {
         
         // Show Modal
         document.getElementById('product-detail-modal').classList.add('active');
+        console.log("openProductDetail: Successfully displayed modal product detail");
     } catch(e) {
+        console.error("openProductDetail: Failed with error:", e);
         showToast(e.message, 'danger');
     }
 }
@@ -2259,7 +2275,7 @@ async function refreshReviewsListInModal(productId) {
     
     try {
         const reviews = await apiCall(`/api/products/${productId}/reviews`);
-        if (reviews.length === 0) {
+        if (!reviews || reviews.length === 0) {
             list.innerHTML = `<p style="color:var(--text-muted); font-size:12px; text-align:center; padding:15px;">Chưa có lượt đánh giá nào cho sản phẩm này.</p>`;
             return;
         }
@@ -2276,16 +2292,16 @@ async function refreshReviewsListInModal(productId) {
             
             card.innerHTML = `
                 <div class="review-item-header">
-                    <span class="review-author">${r.reviewerName || 'Khách hàng ẩn danh'}</span>
+                    <span class="review-author">${r.userName || 'Khách hàng ẩn danh'}</span>
                     <span class="review-date">${formatDate(r.createdAt)}</span>
                 </div>
                 <div class="review-rating">${starsHtml}</div>
-                <p class="review-comment">${r.comment}</p>
+                <p class="review-comment">${r.content || ''}</p>
             `;
             list.appendChild(card);
         });
     } catch(err) {
-        console.error(err);
+        console.error("refreshReviewsListInModal error:", err);
     }
 }
 
