@@ -27,6 +27,21 @@ const state = {
     }
 };
 
+// --- Resolve Image URLs Helper ---
+function resolveImageUrl(url) {
+    if (!url) return 'https://placehold.co/200x150/111827/FFFFFF?text=No+Image';
+    if (url.startsWith('http') || url.startsWith('data:')) return url;
+    
+    // Extract filename from path (e.g. /Content/Anh/iPhone_15_Pro_Max.png)
+    let filename = url.replace(/\\/g, '/');
+    const lastSlashIdx = filename.lastIndexOf('/');
+    if (lastSlashIdx !== -1) {
+        filename = filename.substring(lastSlashIdx + 1);
+    }
+    
+    return `/com/huitshop/Anh/${filename}`;
+}
+
 // --- Toast Notifications ---
 function showToast(message, type = 'success') {
     const container = document.getElementById('toast-container');
@@ -380,12 +395,7 @@ function renderProductCards() {
         const card = document.createElement('div');
         card.className = 'product-card glass-panel';
         
-        // Resolve image URL
-        // If image is relative classpath style, rewrite to WebConfig endpoint
-        let imgUrl = p.thumbnailUrl || 'no-image.png';
-        if (!imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
-            imgUrl = `/com/huitshop/Anh/${imgUrl}`;
-        }
+        const imgUrl = resolveImageUrl(p.thumbnailUrl);
         
         card.innerHTML = `
             <div class="product-img-wrapper">
@@ -403,7 +413,7 @@ function renderProductCards() {
                 <div class="product-price-row">
                     <div>
                         <span class="product-price">${formatVND(p.priceFrom)}</span>
-                        ${p.priceTo && p.priceTo.compareTo(p.priceFrom) > 0 ? ` - <span class="product-price">${formatVND(p.priceTo)}</span>` : ''}
+                        ${p.priceTo && p.priceTo > p.priceFrom ? ` - <span class="product-price">${formatVND(p.priceTo)}</span>` : ''}
                     </div>
                 </div>
             </div>
@@ -537,10 +547,7 @@ function renderCartItems() {
                 const pName = pv.product ? pv.product.name : 'Sản phẩm';
                 const fullName = pName + (pv.variantName ? ` - ${pv.variantName}` : '');
                 
-                let imgUrl = pv.thumbnailUrl || 'no-image.png';
-                if (!imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
-                    imgUrl = `/com/huitshop/Anh/${imgUrl}`;
-                }
+                const imgUrl = resolveImageUrl(pv.thumbnailUrl);
                 
                 return `
                     <div class="cart-item-row glass-panel">
@@ -1486,7 +1493,7 @@ function renderAdminProductsListRows() {
         tr.innerHTML = `
             <td>
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <img src="${p.thumbnailUrl ? (p.thumbnailUrl.startsWith('http') ? p.thumbnailUrl : `/com/huitshop/Anh/${p.thumbnailUrl}`) : 'https://placehold.co/40x40/111827/FFFFFF?text=L'}" 
+                    <img src="${resolveImageUrl(p.thumbnailUrl)}" 
                          style="width:36px; height:36px; object-fit:contain; background:rgba(255,255,255,0.03); padding:2px; border-radius:4px;"
                          onerror="this.src='https://placehold.co/40x40/111827/FFFFFF?text=L'">
                     <div>
@@ -2133,17 +2140,14 @@ async function openProductDetail(productId) {
 
         // Render main image
         const img = document.getElementById('modal-product-img');
-        let imgUrl = p.variants.length > 0 ? p.variants[0].thumbnailUrl : 'no-image.png';
-        if (!imgUrl.startsWith('http') && !imgUrl.startsWith('/')) {
-            imgUrl = `/com/huitshop/Anh/${imgUrl}`;
-        }
+        const imgUrl = resolveImageUrl(p.variants.length > 0 ? p.variants[0].thumbnailUrl : '');
         img.src = imgUrl;
 
         // Render Thumbnails list
         const thumbs = document.getElementById('modal-product-thumbnails');
         thumbs.innerHTML = '';
         p.images.forEach((imgObj, idx) => {
-            const thumbUrl = imgObj.imageUrl.startsWith('http') ? imgObj.imageUrl : `/com/huitshop/Anh/${imgObj.imageUrl}`;
+            const thumbUrl = resolveImageUrl(imgObj.imageUrl);
             const tImg = document.createElement('img');
             tImg.src = thumbUrl;
             if (idx === 0) tImg.className = 'active';
@@ -2173,10 +2177,7 @@ async function openProductDetail(productId) {
                 document.getElementById('modal-product-orig-price').textContent = formatVND(v.originalPrice);
                 
                 // Swap main image
-                let varImg = v.thumbnailUrl || 'no-image.png';
-                if (!varImg.startsWith('http') && !varImg.startsWith('/')) {
-                    varImg = `/com/huitshop/Anh/${varImg}`;
-                }
+                const varImg = resolveImageUrl(v.thumbnailUrl);
                 img.src = varImg;
             });
             varsGrid.appendChild(btn);
