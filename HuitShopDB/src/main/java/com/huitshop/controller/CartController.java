@@ -12,10 +12,20 @@ import java.util.Map;
 @RequestMapping("/api/cart")
 public class CartController {
     private final CartService cartService = new CartService();
+    private final com.huitshop.dao.VoucherDao voucherDao = new com.huitshop.dao.VoucherDao();
 
     @GetMapping("/{userId}")
     public ResponseEntity<Cart> getCart(@PathVariable int userId) {
         return ResponseEntity.ok(cartService.getCartByUserId(userId));
+    }
+
+    @GetMapping("/voucher/{code}")
+    public ResponseEntity<?> getVoucher(@PathVariable String code) {
+        com.huitshop.model.Voucher v = voucherDao.findByCode(code);
+        if (v == null || !v.isActive()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Mã giảm giá không tồn tại hoặc đã bị khóa");
+        }
+        return ResponseEntity.ok(v);
     }
 
     @PostMapping("/{userId}/items")

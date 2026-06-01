@@ -481,6 +481,21 @@ async function loadCartPage() {
         const cart = await apiCall(`/api/cart/${state.user.id}`);
         state.cart = cart;
         
+        let voucherDetail = null;
+        if (cart.voucherCode) {
+            try {
+                voucherDetail = await apiCall(`/api/cart/voucher/${cart.voucherCode}`);
+            } catch(e) {
+                console.warn("Voucher code in cart invalid or expired:", e);
+                // Clear invalid voucher from DB
+                await apiCall(`/api/cart/${state.user.id}/voucher`, {
+                    method: 'POST',
+                    body: JSON.stringify({ voucherCode: null })
+                });
+                state.cart.voucherCode = null;
+            }
+        }
+        
         container.innerHTML = `
             <div class="panel-header">
                 <div>
@@ -495,7 +510,7 @@ async function loadCartPage() {
             </div>
         `;
         
-        renderCartItems();
+        renderCartItems(voucherDetail);
         
         document.getElementById('btn-clear-cart').addEventListener('click', async () => {
             if (confirm('Bạn có muốn xóa toàn bộ giỏ hàng?')) {
@@ -510,7 +525,7 @@ async function loadCartPage() {
     }
 }
 
-function renderCartItems() {
+function renderCartItems(voucherDetail = null) {
     const layout = document.getElementById('cart-content-layout');
     
     if (state.cart.cartItems.length === 0) {
@@ -535,8 +550,25 @@ function renderCartItems() {
     // Simple shipping rule: free if order >= 500k, else 30k
     const shipping = subtotal >= 500000 ? 0 : 30000;
     
-    // Mock Voucher discount mapping (actual calculation happens on placing order, here we fetch code validation details or mock check)
+    // Calculate Voucher discount
     let discount = 0;
+    if (voucherDetail) {
+        if (subtotal >= voucherDetail.minOrderValue) {
+            if (voucherDetail.discountType === 'PERCENT') {
+                discount = subtotal * (voucherDetail.discountValue / 100);
+                if (voucherDetail.maxDiscountAmount && discount > voucherDetail.maxDiscountAmount) {
+                    discount = voucherDetail.maxDiscountAmount;
+                }
+            } else if (voucherDetail.discountType === 'FIXED') {
+                discount = voucherDetail.discountValue;
+            }
+            if (discount > subtotal) {
+                discount = subtotal;
+            }
+        } else {
+            showToast(`Mã giảm giá yêu cầu giá trị đơn hàng tối thiểu ${formatVND(voucherDetail.minOrderValue)}`, 'warning');
+        }
+    }
     
     const total = subtotal - discount + shipping;
     
@@ -581,9 +613,9 @@ function renderCartItems() {
                 <span>${shipping === 0 ? '<span style="color:var(--success);">Miễn phí</span>' : formatVND(shipping)}</span>
             </div>
             
-            <div class="summary-row" id="cart-discount-row" style="display:none;">
+            <div class="summary-row" id="cart-discount-row" style="${discount > 0 ? '' : 'display:none;'}">
                 <span>Giảm giá (Voucher)</span>
-                <span id="cart-discount-value" style="color:var(--success);">-0đ</span>
+                <span id="cart-discount-value" style="color:var(--success);">-${formatVND(discount)}</span>
             </div>
 
             <!-- Voucher Code Entry -->
