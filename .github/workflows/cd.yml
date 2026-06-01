@@ -1,0 +1,140 @@
+name: CD - Build and Deploy
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*.*.*' ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write  # For security scanning
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Required for versioning and SBOM
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          **/packages/*
+          **/.nuget/packages/*
+          ~/.nuget/packages
+          ${{ runner.temp }}/.net/store
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Extract version from project
+      id: version
+      run: |
+        # Extract version from .csproj or use git tag
+        if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+          VERSION="${GITHUB_REF#refs/tags/v}"
+        else
+          # Get version from .csproj or generate from date
+          VERSION=$(grep -oP '(?<=<Version>)[^<]+' BACKEND/src/ECommerce.Huit.API/ECommerce.Huit.API.csproj || echo "0.0.1-${{ github.sha }}")
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Restore dependencies
+      run: dotnet restore BACKEND/src/ECommerce.Huit.API/ECommerce.Huit.API.csproj
+
+    - name: Build
+      run: |
+        cd BACKEND/src/ECommerce.Huit.API
+        dotnet build -c Release --no-restore /p:Version=${{ steps.version.outputs.version }}
+
+    - name: Publish
+      run: |
+        cd BACKEND/src/ECommerce.Huit.API
+        dotnet publish -c Release -o ${{ runner.temp }}/publish --no-build /p:Version=${{ steps.version.outputs.version }}
+
+    - name: Docker meta
+      id: meta
+      uses: crazy-max/ghaction-docker-meta@v1
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tag-sha: true
+        tag-latest: true
+        tag-semver: |
+          # major.minor.patch
+          {{semver ordering=MAJOR,MINOR,PATCH}}
+        tag-custom: ${{ steps.version.outputs.version }}
+
+    - name: Log in to Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Build and push Docker image
+      if: github.event_name != 'pull_request'
+      id: docker_build
+      uses: docker/build-push-action@v5
+      with:
+        context: BACKEND/src/ECommerce.Huit.API
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+        cache-to: type=inline
+
+    - name: Generate SBOM (optional)
+      if: github.event_name != 'pull_request'
+      run: |
+        echo "SBOM generation can be added with CycloneDX if needed."
+        # Uncomment to enable SBOM generation:
+        # dotnet tool install --global CycloneDX
+        # cyclonedx-dotnet -tool -r ${{ runner.temp }}/publish -o ${{ runner.temp }}/bom.xml
+      # Optional step - can be enabled when needed
+
+    - name: Security scan
+      if: github.event_name != 'pull_request'
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ steps.docker_build.outputs.image }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Upload Trivy scan results
+      if: github.event_name != 'pull_request'
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+    - name: Image digest
+      run: |
+        echo "Image pushed: ${{ steps.docker_build.outputs.image }}"
+
+  notify:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+    - name: Summary
+      run: |
+        echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
+        echo "- Status: ${{ needs.build-and-push.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Image: ${{ needs.build-and-push.outputs.image }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Tags: ${{ needs.build-and-push.outputs.tags }}" >> $GITHUB_STEP_SUMMARY

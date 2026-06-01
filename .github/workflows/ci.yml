@@ -1,0 +1,151 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          SA_PASSWORD: YourStrong@Passw0rd
+          ACCEPT_EULA: Y
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd="/opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P 'YourStrong@Passw0rd' -Q 'SELECT 1'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      DOTNET_VERSION: '8.0.x'
+      ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=HuitShopDB_CI;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true"
+      ConnectionStrings__Redis: "localhost:6379"
+      Jwt__Key: "test_super_secret_key_32_chars_minimum_for_ci_only_12345"
+      Jwt__Issuer: "ECommerceHuit-CI"
+      Jwt__Audience: "ECommerceHuitClient-CI"
+      Jwt__DurationInMinutes: "1440"
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Required for code coverage reports and versioning
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          **/packages/*
+          **/.nuget/packages/*
+          ~/.nuget/packages
+          ${{ runner.temp }}/.net/store
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Verify .NET installation
+      run: dotnet --version
+
+    - name: Restore dependencies
+      run: dotnet restore BACKEND/src/ECommerce.Huit.API/ECommerce.Huit.API.csproj
+
+    - name: Build
+      run: dotnet build BACKEND/src/ECommerce.Huit.API/ECommerce.Huit.API.csproj --configuration Release --no-restore
+
+    - name: Wait for SQL Server
+      run: |
+        for i in {1..30}; do
+          /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P 'YourStrong@Passw0rd' -Q 'SELECT 1' && break
+          echo "Waiting for SQL Server..."
+          sleep 2
+        done
+
+    - name: Create test database
+      run: |
+        /opt/mssql-tools/bin/sqlcmd -S localhost -U SA -P 'YourStrong@Passw0rd' -Q "CREATE DATABASE HuitShopDB_CI"
+
+    - name: Run database migrations
+      run: |
+        cd BACKEND/src/ECommerce.Huit.API
+        dotnet ef database update --no-build || echo "EF migrations not yet set up, skipping"
+
+    - name: Test with coverage
+      run: |
+        mkdir -p BACKEND/TestResults
+        # Unit tests with coverage
+        dotnet test tests/UnitTests/UnitTests.csproj \
+          --configuration Release \
+          --no-build \
+          --logger "trx;LogFileName=unit_results.trx" \
+          --results-directory ./BACKEND/TestResults \
+          --collect:"XPlat Code Coverage"
+        # Integration tests with coverage
+        dotnet test tests/IntegrationTests/IntegrationTests.csproj \
+          --configuration Release \
+          --no-build \
+          --logger "trx;LogFileName=integration_results.trx" \
+          --results-directory ./BACKEND/TestResults \
+          --collect:"XPlat Code Coverage"
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: BACKEND/TestResults/
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Run dotnet format check
+      working-directory: BACKEND/src/ECommerce.Huit.API
+      run: dotnet format --verify-no-changes --severity error
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Trivy security scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: 'BACKEND'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: 'trivy-results.sarif'
