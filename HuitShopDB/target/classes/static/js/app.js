@@ -385,7 +385,7 @@ function renderProductCards() {
     
     if (state.catalog.items.length === 0) {
         grid.innerHTML = `<div class="empty-state" style="grid-column: 1/-1; padding: 40px; text-align: center; color: var(--text-muted);">
-            <i class="fa-solid fa-laptop-code" style="font-size: 40px; margin-bottom: 12px; color: var(--primary);"></i>
+            <i class="fa-solid fa-box-open" style="font-size: 40px; margin-bottom: 12px; color: var(--primary);"></i>
             <p>Không tìm thấy sản phẩm nào khớp với bộ lọc của bạn.</p>
         </div>`;
         return;

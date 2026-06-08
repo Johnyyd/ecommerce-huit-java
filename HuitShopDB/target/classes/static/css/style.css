@@ -1,36 +1,36 @@
 /* --- CSS Design System & Custom Tokens --- */
 :root {
-    --bg-main: #070a13;
-    --bg-card: rgba(13, 20, 38, 0.65);
-    --bg-card-hover: rgba(22, 32, 59, 0.85);
-    --border-glass: rgba(255, 255, 255, 0.07);
-    --border-glass-focus: rgba(99, 102, 241, 0.4);
+    --bg-main: #000000;
+    --bg-card: rgba(20, 20, 20, 0.8);
+    --bg-card-hover: rgba(35, 35, 35, 0.9);
+    --border-glass: rgba(255, 255, 255, 0.1);
+    --border-glass-focus: rgba(229, 9, 20, 0.5);
     
     /* Harmonious Brand Colors */
-    --primary: #6366f1; /* Indigo */
-    --primary-hover: #4f46e5;
-    --secondary: #06b6d4; /* Cyan */
+    --primary: #e50914; /* Red */
+    --primary-hover: #b80710;
+    --secondary: #ffffff; /* White */
     --success: #10b981; /* Emerald */
     --warning: #f59e0b; /* Amber */
     --danger: #ef4444; /* Rose */
     
     /* Gradients */
-    --gradient-brand: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #06b6d4 100%);
-    --gradient-card: linear-gradient(145deg, rgba(13, 20, 38, 0.8) 0%, rgba(8, 12, 24, 0.9) 100%);
-    --gradient-blue: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    --gradient-purple: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-    --gradient-rose: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
-    --gradient-emerald: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    --gradient-brand: linear-gradient(135deg, #e50914 0%, #b80710 100%);
+    --gradient-card: linear-gradient(145deg, rgba(30, 30, 30, 0.8) 0%, rgba(10, 10, 10, 0.9) 100%);
+    --gradient-blue: linear-gradient(135deg, #222222 0%, #000000 100%);
+    --gradient-purple: linear-gradient(135deg, #e50914 0%, #000000 100%);
+    --gradient-rose: linear-gradient(135deg, #e50914 0%, #8a040b 100%);
+    --gradient-emerald: linear-gradient(135deg, #ffffff 0%, #cccccc 100%);
 
     /* Typography & Text */
-    --text-primary: #f8fafc;
-    --text-muted: #94a3b8;
-    --text-secondary: #cbd5e1;
+    --text-primary: #ffffff;
+    --text-muted: #888888;
+    --text-secondary: #cccccc;
     --font-outfit: 'Outfit', 'Inter', sans-serif;
     --font-inter: 'Inter', sans-serif;
 
     /* Shadows & Transitions */
-    --shadow-neon: 0 0 15px rgba(99, 102, 241, 0.25);
+    --shadow-neon: 0 0 15px rgba(229, 9, 20, 0.25);
     --shadow-premium: 0 10px 30px rgba(0, 0, 0, 0.4);
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --border-radius-lg: 16px;
@@ -53,7 +53,7 @@ body {
     overflow-x: hidden;
     min-height: 100vh;
     background-image: 
-        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 10% 20%, rgba(229, 9, 20, 0.08) 0%, transparent 40%),
         radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
     background-attachment: fixed;
 }
@@ -71,7 +71,7 @@ body {
     border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(99, 102, 241, 0.4);
+    background: rgba(229, 9, 20, 0.4);
 }
 
 /* --- Helper Utilities --- */
@@ -137,7 +137,7 @@ body {
 
 .logo-icon {
     color: var(--primary);
-    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6));
+    filter: drop-shadow(0 0 8px rgba(229, 9, 20, 0.6));
     animation: pulse 2s infinite;
 }
 
@@ -233,7 +233,7 @@ textarea:focus {
 .btn-primary:hover {
     transform: translateY(-2px);
     filter: brightness(1.1);
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 0 20px rgba(229, 9, 20, 0.4);
 }
 
 .btn-secondary {
@@ -327,9 +327,9 @@ textarea:focus {
 }
 
 .role-badge {
-    background: rgba(99, 102, 241, 0.15);
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    color: #818cf8;
+    background: rgba(229, 9, 20, 0.15);
+    border: 1px solid rgba(229, 9, 20, 0.3);
+    color: #ff4d4d;
     font-size: 10px;
     font-weight: 700;
     padding: 3px 10px;
@@ -367,13 +367,13 @@ textarea:focus {
 }
 
 .nav-item.active {
-    background: rgba(99, 102, 241, 0.12);
-    border-color: rgba(99, 102, 241, 0.2);
-    color: #a5b4fc;
+    background: rgba(229, 9, 20, 0.12);
+    border-color: rgba(229, 9, 20, 0.2);
+    color: #ffb3b3;
 }
 
 .nav-item.active i {
-    color: #818cf8;
+    color: #ff4d4d;
 }
 
 .nav-item i {
@@ -536,8 +536,8 @@ textarea:focus {
 }
 
 .cart-trigger:hover {
-    background: rgba(99, 102, 241, 0.15);
-    color: #a5b4fc;
+    background: rgba(229, 9, 20, 0.15);
+    color: #ffb3b3;
 }
 
 .cart-badge {
@@ -630,8 +630,8 @@ textarea:focus {
 }
 
 .filter-btn-item:hover, .filter-btn-item.active {
-    background: rgba(99, 102, 241, 0.1);
-    color: #a5b4fc;
+    background: rgba(229, 9, 20, 0.1);
+    color: #ffb3b3;
 }
 
 .product-grid {
@@ -1045,7 +1045,7 @@ textarea:focus {
     width: 48px;
     height: 48px;
     border-radius: var(--border-radius-md);
-    background: rgba(99, 102, 241, 0.1);
+    background: rgba(229, 9, 20, 0.1);
     color: var(--primary);
     font-size: 20px;
     display: flex;
@@ -1212,8 +1212,8 @@ textarea:focus {
 
 .variant-btn.active {
     border-color: var(--primary);
-    background: rgba(99, 102, 241, 0.1);
-    color: #a5b4fc;
+    background: rgba(229, 9, 20, 0.1);
+    color: #ffb3b3;
 }
 
 /* --- Tabs inside Modals --- */
@@ -1470,7 +1470,7 @@ textarea:focus {
 }
 
 @keyframes pulse {
-    0% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6)); }
-    50% { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.8)); }
-    100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6)); }
+    0% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(229, 9, 20, 0.6)); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(229, 9, 20, 0.8)); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 8px rgba(229, 9, 20, 0.6)); }
 }
