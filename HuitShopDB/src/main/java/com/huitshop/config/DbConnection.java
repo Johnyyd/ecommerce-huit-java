@@ -18,7 +18,7 @@ public class DbConnection {
                 System.out.println("Sorry, unable to find application.properties. Using fallback connection details.");
                 url = "jdbc:sqlserver://localhost;databaseName=HuitShopDB;encrypt=false;trustServerCertificate=true";
                 user = "sa";
-                password = "YourPassword";
+                password = "123";
             } else {
                 prop.load(input);
                 url = prop.getProperty("db.url");
