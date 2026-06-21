@@ -320,8 +320,11 @@
                             <input type="text" id="admin-variant-sku" placeholder="ASUS-FA507-GREY">
                         </div>
                         <div class="form-group">
-                            <label for="admin-variant-thumbnail">Ảnh sản phẩm (Tên file ảnh)</label>
-                            <input type="text" id="admin-variant-thumbnail" placeholder="laptop_asus.jpg">
+                            <label for="admin-variant-thumbnail-file">Ảnh sản phẩm (Chọn file)</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <input type="file" id="admin-variant-thumbnail-file" accept="image/*" style="flex: 1; padding: 9px; cursor: pointer;">
+                                <input type="text" id="admin-variant-thumbnail" placeholder="Tên file ảnh (tự động điền)" readonly style="flex: 1; background: rgba(0,0,0,0.2); cursor: not-allowed;">
+                            </div>
                         </div>
                     </div>
                     <div class="form-grid-2">

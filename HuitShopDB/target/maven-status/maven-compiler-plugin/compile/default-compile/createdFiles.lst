@@ -46,6 +46,7 @@ com\huitshop\dao\InventoryDao.class
 com\huitshop\dto\OrderDtos$OrderResponseDto.class
 com\huitshop\dao\ProductDao.class
 com\huitshop\dto\AuthDtos$LoginDto.class
+com\huitshop\controller\FileUploadController.class
 com\huitshop\controller\UserController.class
 com\huitshop\controller\CartController.class
 com\huitshop\dto\ProductDtos$CategoryDto.class

@@ -1539,14 +1539,14 @@ function renderAdminProductsListRows() {
             <td><code>${p.reviewCount || 0}</code> đánh giá</td>
             <td><strong>${formatVND(p.priceFrom)}</strong></td>
             <td>
-                <span class="status-badge" style="background:${p.isActive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color:${p.isActive ? 'var(--success)' : 'var(--danger)'}; border:1px solid ${p.isActive ? 'var(--success)' : 'var(--danger)'};">
-                    ${p.isActive ? 'Active' : 'Inactive'}
+                <span class="status-badge" style="background:${p.status === 'ACTIVE' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color:${p.status === 'ACTIVE' ? 'var(--success)' : 'var(--danger)'}; border:1px solid ${p.status === 'ACTIVE' ? 'var(--success)' : 'var(--danger)'};">
+                    ${p.status === 'ACTIVE' ? 'Active' : 'Inactive'}
                 </span>
             </td>
             <td>
                 <button class="btn btn-secondary btn-sm btn-edit-prod" data-id="${p.id}"><i class="fa-regular fa-pen-to-square"></i> Sửa</button>
-                <button class="btn btn-sm ${p.isActive ? 'btn-danger' : 'btn-success'} btn-toggle-status" data-id="${p.id}" data-active="${p.isActive}">
-                    ${p.isActive ? '<i class="fa-solid fa-eye-slash"></i> Khóa' : '<i class="fa-solid fa-eye"></i> Mở'}
+                <button class="btn btn-sm ${p.status === 'ACTIVE' ? 'btn-danger' : 'btn-success'} btn-toggle-status" data-id="${p.id}" data-active="${p.status === 'ACTIVE'}">
+                    ${p.status === 'ACTIVE' ? '<i class="fa-solid fa-eye-slash"></i> Khóa' : '<i class="fa-solid fa-eye"></i> Mở'}
                 </button>
             </td>
         `;
@@ -1556,7 +1556,7 @@ function renderAdminProductsListRows() {
         });
         
         tr.querySelector('.btn-toggle-status').addEventListener('click', async () => {
-            const nextStatus = p.isActive ? 'INACTIVE' : 'ACTIVE';
+            const nextStatus = p.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
             try {
                 await apiCall(`/api/products/${p.id}/toggle-status?status=${nextStatus}`, { method: 'PUT' });
                 showToast('Đã đổi trạng thái sản phẩm');
@@ -2766,6 +2766,36 @@ function setupModalListeners() {
                 }
             });
         });
+    });
+
+    // Upload Image Handler
+    document.getElementById('admin-variant-thumbnail-file')?.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        const textInput = document.getElementById('admin-variant-thumbnail');
+        textInput.value = 'Đang tải lên...';
+        
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        try {
+            const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (res.ok) {
+                textInput.value = data.filename;
+                showToast('Tải ảnh lên thành công', 'success');
+            } else {
+                textInput.value = '';
+                showToast(data.message || 'Lỗi tải ảnh', 'danger');
+            }
+        } catch (err) {
+            textInput.value = '';
+            showToast('Lỗi kết nối khi tải ảnh', 'danger');
+        }
     });
 
     // Admin create/edit product form submission
